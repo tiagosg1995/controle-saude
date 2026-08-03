@@ -285,16 +285,6 @@ Nenhum remédio cadastrado.
 
 </nav>
 </div>
-<script>
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js')
-            .then(() => console.log('Service Worker registrado'))
-            .catch(err => console.error('Erro ao registrar Service Worker:', err));
-    });
-}
-</script>
-
 <script src="script.js"></scr
 </body>
 </html>
