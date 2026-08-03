@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle Saúde</title>
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icone-192.png">
+<link rel="apple-touch-icon" href="icone-192.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<meta name="theme-color" content="#8b5cf6">
+</head>
+<body>
+
+<div id="telaBoasVindas" class="boasVindas">
+  <div class="caixaBoasVindas">
+    <h1><i class="bi bi-heart-pulse-fill"></i> Controle Saúde</h1>
+    <p>Bem-vindo!</p>
+    <input id="nomeUsuario" type="text" placeholder="Digite seu nome">
+    <button onclick="salvarNome()">Continuar</button>
+  </div>
+</div>
+
+<header>
+  <div class="logo">
+    <i class="bi bi-heart-pulse-fill"></i>
+    <span>Controle Saúde</span>
+  </div>
+</header>
+
+<div class="container">
+
+<h1 id="tituloPagina"></h1>
+<h3 id="boasVindas"></h3>
+
+<section id="inicio" class="tela ativa">
+  <div class="dashboard">
+    <div class="card">
+      <h2><i class="bi bi-droplet-fill"></i> Água Hoje</h2>
+      <div class="numero" id="dashAgua">0 / 2000 ml</div>
+      <div class="barra"><div id="progressoAgua"></div></div>
+      <div class="statusAgua">
+        <p id="percentualAgua">0% da meta</p>
+        <p id="statusAgua">💧 Vamos começar!</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><i class="bi bi-cup-hot-fill"></i> Refeições</h2>
+      <div class="numero"><span id="dashRefeicoes">0</span> registradas</div>
+    </div>
+
+    <div class="card">
+      <h2><i class="bi bi-alarm-fill"></i> Próxima refeição</h2>
+      <p id="proximaRefeicao">Nenhuma programada</p>
+    </div>
+
+    <div class="card">
+      <h2><i class="bi bi-trophy-fill"></i> Sequência</h2>
+      <p><span id="sequenciaDias">0</span> dias</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><i class="bi bi-calendar-event-fill"></i> Escolher dia</h2>
+    <input type="date" id="dataSelecionada" onchange="trocarDia()">
+  </div>
+
+  <button id="btnTema" class="btnTema" onclick="alternarTema()">
+    <i class="bi bi-moon-stars-fill"></i>
+  </button>
+</section>
+
+<section id="agua" class="tela">
+  <div class="card">
+    <h2><i class="bi bi-droplet-fill"></i> Controle de Água</h2>
+    <p>Quantidade: <b id="quantidadeAgua">0 ml</b></p>
+
+    <div class="aguaPersonalizada">
+      <input id="aguaPersonalizada" type="number" placeholder="250 ml">
+      <button onclick="adicionarAguaPersonalizada()">Adicionar</button>
+    </div>
+
+    <button onclick="adicionarAgua(100)">+100 ml</button>
+    <button onclick="adicionarAgua(200)">+200 ml</button>
+    <button onclick="adicionarAgua(300)">+300 ml</button>
+    <button onclick="adicionarAgua(500)">+500 ml</button>
+    <button onclick="zerarAgua()">Limpar água do dia</button>
+
+    <h3>Histórico</h3>
+    <ul id="historicoAgua"></ul>
+    <h3>Lembrete de hidratação</h3>
+
+<select id="intervaloAgua">
+
+<option value="60">
+A cada 1 hora
+</option>
+
+<option value="120">
+A cada 2 horas
+</option>
+
+<option value="180">
+A cada 3 horas
+</option>
+
+</select>
+
+<button onclick="lembreteAgua()">
+Ativar lembrete de água
+</button>
+  </div>
+
+</section>
+
+<section id="refeicoes" class="tela">
+  <div class="card">
+    <h2><i class="bi bi-cup-hot-fill"></i> Refeições</h2>
+    <select id="refeicao">
+      <option>Café da manhã</option><option>Lanche da manhã</option>
+      <option>Almoço</option><option>Lanche da tarde</option>
+      <option>Jantar</option><option>Ceia</option>
+    </select>
+    <button onclick="registrarRefeicao()">Registrar refeição</button>
+    <button onclick="limparRefeicoes()">Limpar refeições</button>
+    <ul id="historicoRefeicao"></ul>
+  </div>
+  <div class="card">
+    <h2><i class="bi bi-alarm-fill"></i> Horários</h2>
+    <input type="time" id="horaComida">
+    <button onclick="adicionarComida()">Adicionar horário</button>
+    <ul id="listaComida"></ul>
+  </div>
+</section>
+
+<section id="remedios" class="tela">
+
+<div class="card">
+
+<h2>
+<i class="bi bi-capsule-pill"></i>
+Controle de Remédios
+</h2>
+
+<label>Nome do remédio</label>
+
+<input
+id="nomeRemedio"
+type="text"
+placeholder="Ex.: Losartana">
+
+<label>Dosagem</label>
+
+<input
+id="dosagemRemedio"
+type="text"
+placeholder="Ex.: 50 mg">
+
+<label>Horário</label>
+
+<input
+id="horaRemedio"
+type="time">
+
+<label>Observação (opcional)</label>
+
+<textarea
+id="obsRemedio"
+rows="3"
+placeholder="Tomar após o café da manhã"></textarea>
+
+<button onclick="cadastrarRemedio()">
+
+<i class="bi bi-plus-circle-fill"></i>
+
+Cadastrar Remédio
+
+</button>
+
+</div>
+
+
+
+<div class="card">
+
+<h2>
+
+<i class="bi bi-list-check"></i>
+
+Meus Remédios
+
+</h2>
+
+<ul id="listaRemedios">
+
+<li style="justify-content:center;color:#888;">
+
+Nenhum remédio cadastrado.
+
+</li>
+
+</ul>
+
+</div>
+
+</section>
+
+<section id="resumo" class="tela">
+<div class="card">
+<h2><i class="bi bi-bar-chart-fill"></i> Resumo</h2>
+<p>Data: <b id="resumoData"></b></p>
+<p>Água: <b id="resumoAgua"></b></p>
+<p>Refeições: <b id="resumoRefeicoes"></b></p>
+<ul id="listaResumo"></ul>
+<ul id="proximosHorarios"></ul>
+<h3>
+
+💊 Remédios de Hoje
+
+</h3>
+
+<ul id="resumoRemedios">
+
+<li>
+
+Nenhum remédio cadastrado.
+
+</li>
+
+</ul>
+
+</div>
+</section>
+
+<section id="configuracoes" class="tela">
+<div class="card">
+<h2><i class="bi bi-gear-fill"></i> Configurações</h2>
+<input id="novoNome" placeholder="Novo nome">
+<button onclick="alterarNome()">Salvar nome</button>
+<input id="metaAgua" type="number" placeholder="Meta em ml">
+<button onclick="salvarMetaAgua()">Salvar meta</button>
+</div>
+</section>
+
+<nav class="menu">
+
+<button class="ativo" onclick="abrirTela('inicio',this)">
+<i class="bi bi-house-door-fill"></i>
+<span>Início</span>
+</button>
+
+<button onclick="abrirTela('agua',this)">
+<i class="bi bi-droplet-fill"></i>
+<span>Água</span>
+</button>
+
+<button onclick="abrirTela('refeicoes',this)">
+<i class="bi bi-cup-hot-fill"></i>
+<span>Refeições</span>
+</button>
+
+<button onclick="abrirTela('remedios',this)">
+<i class="bi bi-capsule-pill"></i>
+<span>Remédios</span>
+</button>
+
+<button onclick="abrirTela('resumo',this)">
+<i class="bi bi-bar-chart-fill"></i>
+<span>Resumo</span>
+</button>
+
+<button onclick="abrirTela('configuracoes',this)">
+<i class="bi bi-gear-fill"></i>
+<span>Ajustes</span>
+</button>
+
+</nav>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
