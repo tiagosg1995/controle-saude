@@ -1165,6 +1165,137 @@ function possuiCapacitor(){
 }
 
 
+// ======================================================
+// CONFIGURAÇÃO DO WORKER
+// ======================================================
+
+const WORKER_URL = "https://controle-saude-worker.mateusswsw.workers.dev";
+
+
+// ======================================================
+// VERIFICA SE O NAVEGADOR SUPORTA WEB NOTIFICATIONS
+// ======================================================
+
+function possuiWebNotificacoes(){
+
+    return "Notification" in window;
+
+}
+
+
+// ======================================================
+// OBTÉM O SUBSCRIBER ID DO PUSHALERT
+// ======================================================
+
+function obterPushAlertSubscriberId(){
+
+    return window.PushAlertCo && window.PushAlertCo.subs_id
+        ? String(window.PushAlertCo.subs_id)
+        : null;
+
+}
+
+
+// ======================================================
+// LEMBRETE DE ÁGUA VIA CLOUDFLARE WORKER + PUSHALERT
+// ======================================================
+
+async function _ativarLembreteWorker(subscriberId, intervaloHoras){
+
+    const res = await fetch(`${WORKER_URL}/registrar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscriberId, intervaloHoras }),
+    });
+
+    if(!res.ok){
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.erro || "Erro ao registrar lembrete.");
+    }
+
+    localStorage.setItem(
+        "lembreteAguaWorker",
+        JSON.stringify({ subscriberId, intervaloHoras })
+    );
+
+}
+
+async function _cancelarLembreteWorker(subscriberId){
+
+    await fetch(`${WORKER_URL}/cancelar`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscriberId }),
+    }).catch(() => {});
+
+    localStorage.removeItem("lembreteAguaWorker");
+
+}
+
+
+// ======================================================
+// LEMBRETE DE ÁGUA VIA WEB NOTIFICATIONS API (FALLBACK)
+// ======================================================
+
+let _intervaloAguaTimer = null;
+
+function _iniciarTimerAguaPWA(intervaloMs){
+
+    clearInterval(_intervaloAguaTimer);
+
+    _intervaloAguaTimer = setInterval(async () => {
+
+        const reg = navigator.serviceWorker?.controller
+            ? await navigator.serviceWorker.ready
+            : null;
+
+        if(reg){
+
+            reg.showNotification("💧 Hora de beber água", {
+                body: "Sua hidratação é importante!",
+                icon: "./icone-192.png"
+            });
+
+        } else if(Notification.permission === "granted"){
+
+            new Notification("💧 Hora de beber água", {
+                body: "Sua hidratação é importante!",
+                icon: "./icone-192.png"
+            });
+
+        }
+
+    }, intervaloMs);
+
+}
+
+function _restaurarLembreteAguaPWA(){
+
+    const salvo = localStorage.getItem("lembreteAguaPWA");
+
+    if(!salvo) return;
+
+    const { intervaloMs } = JSON.parse(salvo);
+
+    if(Notification.permission === "granted"){
+
+        _iniciarTimerAguaPWA(intervaloMs);
+
+    }
+
+}
+
+function _cancelarLembreteAguaPWA(){
+
+    clearInterval(_intervaloAguaTimer);
+
+    _intervaloAguaTimer = null;
+
+    localStorage.removeItem("lembreteAguaPWA");
+
+}
+
+
 
 // ======================================================
 // TESTE DE NOTIFICAÇÃO
@@ -1232,78 +1363,111 @@ async function lembreteAgua(){
     }
 
 
-    if(!possuiCapacitor()){
+    if(possuiCapacitor()){
 
-        alert("Capacitor não encontrado.");
+        const permissao =
+        await Capacitor.Plugins.LocalNotifications.requestPermissions();
 
-        return;
+        if(permissao.display !== "granted"){
+
+            alert("Permissão negada.");
+
+            return;
+
+        }
+
+        // Remove lembrete antigo da água
+        await Capacitor.Plugins.LocalNotifications.cancel({
+            notifications:[{ id:10 }]
+        });
+
+        const agora = new Date();
+
+        agora.setHours(agora.getHours()+1);
+
+        await Capacitor.Plugins.LocalNotifications.schedule({
+
+            notifications:[{
+
+                id:10,
+
+                title:"💧 Hora de beber água",
+
+                body:"Sua hidratação é importante!",
+
+                schedule:{
+
+                    at:agora,
+
+                    repeats:true,
+
+                    every:"hour",
+
+                    count: intervalo / 60
+
+                }
+
+            }]
+
+        });
+
+        alert(`Lembrete ativado a cada ${intervalo/60} hora(s).`);
+
+    } else if(possuiWebNotificacoes()){
+
+        const permissao =
+        await Notification.requestPermission();
+
+        if(permissao !== "granted"){
+
+            alert("Permissão de notificação negada.");
+
+            return;
+
+        }
+
+        // Tenta usar o Worker + PushAlert (funciona com app fechado)
+        const subscriberId = obterPushAlertSubscriberId();
+
+        if(subscriberId){
+
+            try {
+
+                await _ativarLembreteWorker(subscriberId, intervalo / 60);
+
+                _cancelarLembreteAguaPWA();
+
+                alert(`Lembrete ativado a cada ${intervalo/60} hora(s). ✅ Funciona mesmo com o app fechado!`);
+
+                return;
+
+            } catch(e){
+
+                console.warn("Worker indisponível, usando fallback local:", e);
+
+            }
+
+        }
+
+        // Fallback: setInterval local (app precisa estar aberto)
+        const intervaloMs = intervalo * 1000;
+
+        _cancelarLembreteAguaPWA();
+
+        _iniciarTimerAguaPWA(intervaloMs);
+
+        localStorage.setItem(
+            "lembreteAguaPWA",
+            JSON.stringify({ intervaloMs })
+        );
+
+        alert(`Lembrete ativado a cada ${intervalo/60} hora(s).\n⚠️ O lembrete funciona enquanto o app estiver aberto.`);
+
+    } else {
+
+        alert("Notificações não são suportadas neste navegador.");
 
     }
-
-
-    const permissao =
-    await Capacitor.Plugins.LocalNotifications.requestPermissions();
-
-
-    if(permissao.display !== "granted"){
-
-        alert("Permissão negada.");
-
-        return;
-
-    }
-
-
-    // Remove lembrete antigo da água
-    await Capacitor.Plugins.LocalNotifications.cancel({
-        notifications:[
-            {
-                id:10
-            }
-        ]
-    });
-
-
-
-    const agora = new Date();
-
-
-    agora.setHours(
-        agora.getHours()+1
-    );
-
-
-    await Capacitor.Plugins.LocalNotifications.schedule({
-
-        notifications:[{
-
-            id:10,
-
-            title:"💧 Hora de beber água",
-
-            body:"Sua hidratação é importante!",
-
-
-            schedule:{
-
-                at:agora,
-
-                repeats:true,
-
-                every:"hour",
-
-                count: intervalo / 60
-
-            }
-
-        }]
-
-    });
-
-
-    alert(
-        `Lembrete ativado a cada ${intervalo/60} hora(s).`
-    );
 
 }
 
@@ -1396,6 +1560,8 @@ function iniciarApp(){
     reagendarRemedios();
 
     atualizarResumoRemedios();
+
+    _restaurarLembreteAguaPWA();
 
     registrarPWA();
 
