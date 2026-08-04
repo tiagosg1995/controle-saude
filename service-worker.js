@@ -1,3 +1,5 @@
+importScripts('https://cdn.pushalert.co/sw_026c23e13314379e3ec35c6167b89111.js');
+
 const CACHE = "controle-saude-v2";
 
 const arquivos = [
