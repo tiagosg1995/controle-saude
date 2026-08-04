@@ -1,0 +1,10 @@
+name = "controle-saude-worker"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[triggers]
+crons = ["*/30 * * * *"]
+
+[[kv_namespaces]]
+binding = "LEMBRETES"
+id = "fd82c7295cff418ea0c1d75978ae3ad4"
